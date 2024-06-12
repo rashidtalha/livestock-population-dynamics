@@ -3,19 +3,16 @@ rng = np.random.default_rng()
 
 tau_m = 60
 tau_f = 144
-
 tau_start = 24
 tau_end = 120
-
-tau_preg = 5
-tau_gap = 2
+tau_preg = 7
+tau_gap = 5
 
 prob_start = 0.95
 prob_end = 0.93
 prob_female = 0.5
 prob_preg = 0.9
-prob_kids = [0.4, 0.3, 0.2, 0.1]
-
+prob_kids = [0.35, 0.45, 0.20]
 
 def estimated_life_expectency(female, current_age):
     val = 0
@@ -42,17 +39,20 @@ def estimated_life_expectency(female, current_age):
 class Society():
     def __init__(self, count=1, starting_age=0):
         self.families = []
-        self.counters = {"inactive_familes":0}
+        self.counters = {"active_familes":0, "inactive_familes":0, "alive_male":0, "alive_female":0, "dead_male":0, "dead_female":0}
 
         for _ in range(count):
             f = Family(True)
             max_age = estimated_life_expectency(True, starting_age)
             f.goats.append(Goat(True, starting_age, max_age, False))
             self.families.append(f)
+            self.counters["active_familes"] += 1
+            self.counters["alive_female"] += 1
 
     def next_month(self, count=1):
         for _ in range(count):
             new_families = []
+
             for f in self.families:
                 for g in f.goats:
                     ## New family dynamics
@@ -75,6 +75,10 @@ class Society():
                             if starts_new:
                                 f.first_female_born = True
                             f.goats.append(Goat(is_female, 0, max_age, starts_new))
+                            if is_female:
+                                self.counters["alive_female"] += 1
+                            else:
+                                self.counters["alive_male"] += 1
                         continue
 
                     ## Pregnancy dynamics
@@ -88,41 +92,61 @@ class Society():
                     ## Death dynamics
                     g.age += 1
                     g.alive = g.age < g.life
+                    if not g.alive:
+                        if g.female:
+                            self.counters["alive_female"] -= 1
+                            self.counters["dead_female"] += 1
+                        else:
+                            self.counters["alive_male"] -= 1
+                            self.counters["dead_male"] += 1
 
                 f.goats = [g for g in f.goats if g.alive]
                 f.active = len(f.goats) > 0
+                if not f.active:
+                    self.counters["active_familes"] -= 1
+                    self.counters["inactive_familes"] += 1
+
+            self.families = [f for f in self.families if f.active]
 
             for j in new_families:
                 f = Family(True)
                 f.goats.append(Goat(True, j[0], j[1], False))
                 self.families.append(f)
+                self.counters["active_familes"] += 1
 
-            a = len(self.families)
-            self.families = [f for f in self.families if f.active]
-            b = len(self.families)
-            self.counters["inactive_familes"] += max(a-b, 0)
 
     @property
-    def alive_goats(self):
-        goats_f = 0
-        goats_m = 0
-        self.families = [f for f in self.families if f.active]
-        for f in self.families:
-            for g in f.goats:
-                if g.alive:
-                    if g.female:
-                        goats_f += 1
-                    else:
-                        goats_m += 1
-        return goats_f, goats_m
+    def alive_females(self):
+        return self.counters["alive_female"]
+
+    @property
+    def alive_males(self):
+        return self.counters["alive_male"]
+
+    @property
+    def dead_females(self):
+        return self.counters["dead_female"]
+
+    @property
+    def dead_males(self):
+        return self.counters["dead_male"]
 
     @property
     def active_families(self):
-        return len([f for f in self.families if f.active])
+        return self.counters["active_familes"]
 
     @property
     def inactive_families(self):
         return self.counters["inactive_familes"]
+
+    @property
+    def age_distributions(self):
+        ages_female, ages_male = [], []
+        for f in self.families:
+            for g in f.goats:
+                if g.alive:
+                    ages_female.append(g.age) if g.female else ages_male.append(g.age)
+        return ages_female, ages_male
 
 
 class Family():
@@ -136,6 +160,7 @@ class Family():
         self.goats = []
         self.active = active
         self.first_female_born = False
+        self.female_capacity = None
 
 
 class Goat():
