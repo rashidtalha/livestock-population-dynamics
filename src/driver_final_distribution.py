@@ -3,22 +3,22 @@ import matplotlib.pyplot as plt
 
 import model
 
-# ### Model Parameters
-# model.tau_m = 60
-# model.tau_f = 144
-# model.tau_start = 24
-# model.tau_end = 120
-# model.tau_preg = 7
-# model.tau_gap = 5
-# model.prob_start = 0.95
-# model.prob_end = 0.93
-# model.prob_female = 0.5
-# model.prob_preg = 0.9
-# model.prob_kids = [0.35, 0.45, 0.20]
+### Model Parameters
+model.tau_m = 60
+model.tau_f = 144
+model.tau_start = 24
+model.tau_end = 120
+model.tau_preg = 7
+model.tau_gap = 5
+model.prob_start = 0.95
+model.prob_end = 0.93
+model.prob_female = 0.5
+model.prob_preg = 0.9
+model.prob_kids = [0, 0.1, 0.9]
 
 ### Simulation Parameters
-simulation_duration = 12*4 # in months
-initial_goats = 50 # in months
+simulation_duration = 12*5 # in months
+initial_goats = 20 # in months
 initial_age = 36 # in months
 
 ### Distribution output
@@ -54,10 +54,10 @@ inact_st, inact_ct = np.unique(data[4], return_counts=True)
 
 print(f"Initial goats {initial_goats} (starting age: {initial_age})")
 print(f"Simulating for {simulation_duration} months. (Runs = {runs})")
-print(f"Alive female goats: Mean = {mu_0:.3f}, Std = {si_0:.3f}")
-print(f"Alive male goats: Mean = {mu_1:.3f}, Std = {si_1:.3f}")
-print(f"Alive total goats: Mean = {mu_2:.3f}, Std = {si_2:.3f}")
-print(f"Active families: Mean = {mu_3:.3f}, Std = {si_3:.3f}")
+print(f"Alive female goats: Mean = {mu_0:.0f}, Std = {si_0:.2f}")
+print(f"Alive male goats: Mean = {mu_1:.0f}, Std = {si_1:.2f}")
+print(f"Alive total goats: Mean = {mu_2:.0f}, Std = {si_2:.2f}")
+print(f"Active families: Mean = {mu_3:.0f}, Std = {si_3:.2f}")
 print(f"Inactive families: {inact_st} with counts {inact_ct}")
 
 fig, ax = plt.subplots(2, 2, figsize=(10,8), constrained_layout=True)

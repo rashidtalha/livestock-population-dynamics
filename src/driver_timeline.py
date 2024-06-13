@@ -17,7 +17,7 @@ import model
 # model.prob_kids = [0.35, 0.45, 0.20]
 
 ### Simulation Parameters
-simulation_duration = 12*4 # in months
+simulation_duration = 144 # in months
 initial_goats = 50 # in months
 initial_age = 36 # in months
 

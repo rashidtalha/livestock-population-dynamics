@@ -31,10 +31,10 @@ xm, ym = np.unique(data[1], return_counts=True)
 
 print(f"Initial goats {initial_goats} (starting age: {initial_age})")
 print(f"Simulating for {simulation_duration} months.")
-print(f"\nFemales:")
+print(f"\nFemales: ({s.alive_females})")
 print(f"\tAges   : {xf}")
 print(f"\tCounts : {yf}")
-print(f"\nMales:")
+print(f"\nMales: ({s.alive_males})")
 print(f"\tAges   : {xm}")
 print(f"\tCounts : {ym}")
 
