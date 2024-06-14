@@ -4,8 +4,63 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Poor Goats</title>
+    <!-- <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}"> -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='gridspec.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='common.css') }}">
 </head>
 <body>
-Hello, World!
+
+    <nav class="container">
+
+        <div class="navbar-brand-box">
+            <a href="#" title="Poor Goats" class="navbar-brand">Poor Goats</a>
+        </div>
+
+        <div class="navbar-entries">
+            <a href="https://rashidtalha.github.io/projects.html" title="Projects" class="navbar-item">Projects</a>
+        </div>
+
+    </nav>
+
+<div class="container">
+
+    <main>
+    <div class="frow">
+        <div class="fcell parameters">
+            <p>With an aim to explore differential geometry and specialise in the phenomenological aspects of QFTs in curved spacetime.</p>
+            <form id="sim_form" action="{{ url_for('run_model')}}" method="post">
+                <h3>Simulation Parameters</h3>
+                <label>
+                    Initial goats: <input type="textbox" name="initial_goats">
+                </label>
+                <label>
+                    Initial age: <input type="textbox" name="initial_age">
+                </label>
+                <label>
+                    Simulation duration: <input type="textbox" name="sim_duration">
+                </label>
+                <h3>Model Parameters</h3>
+                <label>
+                    Pregnancy duration: <input type="textbox" name="sim_duration">
+                </label>
+                <input type="submit" id="sim_run" value="Simulate">
+            </form>            
+        </div>
+        <div class="fcell results">
+            <h3>Results</h3>
+            <p id="result_info">Text</p>
+            <p id="result_stats">Text</p>
+            <p id="result_plot_a">Text</p>
+
+            <p>Plots <img src=""></p>
+        </div>
+    </div>
+    </main>
+
+</div>
+
+<!-- <script defer src="{{ url_for('static', filename='jquery-3.7.0-slim.min.js') }}" type="text/javascript"></script> -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script defer src="{{ url_for('static', filename='main.js') }}" type="text/javascript"></script>
 </body>
 </html>

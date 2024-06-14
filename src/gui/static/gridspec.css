@@ -1,0 +1,61 @@
+/*
+  Author: Rashid Talha;
+  Version: 1.0;
+  Date:  12 September 2021;
+  Licence:  MIT;
+*/
+
+
+/* ==== SOME NORMALISATION ==== */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  left: 0;
+  top: 0;
+  font-size: 100%;
+}
+
+/* ==== FLEX GRID (MOBILE FIRST) ==== */
+.container {
+  padding-left: 5%;
+  padding-right: 5%;
+}
+
+.frow {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 -0.5em;
+  flex-direction: column;
+}
+
+.fcell {
+  flex: 1;
+  margin: 0 0.5em;
+  margin-bottom: 1em;
+}
+
+/* ==== FLEX GRID (MEDIUM SCREENS) ==== */
+@media screen and (min-width: 660px) {
+  .container {
+    padding-left: 10%;
+    padding-right: 10%;
+  }
+}
+
+/* ==== FLEX GRID (LARGE SCREENS) ==== */
+@media screen and (min-width: 960px) {
+  .container {
+    padding-left: 13%;
+    padding-right: 13%;
+  }
+  .frow {
+    flex-direction: row;
+  }
+}
