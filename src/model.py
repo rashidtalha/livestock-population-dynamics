@@ -1,5 +1,4 @@
-import numpy as np
-rng = np.random.default_rng()
+from random import choices, uniform, randint
 
 tau_m = 60
 tau_f = 144
@@ -18,21 +17,21 @@ def estimated_life_expectency(female, current_age):
     val = 0
     if female:
         if (0 <= current_age < tau_start):
-            if rng.uniform() < prob_start:
+            if uniform(0,1) < prob_start:
                 val = tau_start
             else:
-                val = rng.integers(0, tau_start)
+                val = randint(0, tau_start)
         if (tau_start <= current_age < tau_end) or (val == tau_start):
-            if rng.uniform() < prob_end:
+            if uniform(0,1) < prob_end:
                 val = tau_end
             else:
-                val = rng.integers(tau_start+tau_preg, tau_end)
+                val = randint(tau_start+tau_preg, tau_end)
         if (tau_end <= current_age) or (tau_end == val):
             # val = tau_f
-            val = rng.integers(tau_end, tau_f)
+            val = randint(tau_end, tau_f)
     else:
         # val = tau_m
-        val = rng.integers(0, tau_m)
+        val = randint(0, tau_m)
     return val
 
 
@@ -66,10 +65,11 @@ class Society():
                         g.preg = False
                         g.preg_duration = 0
                         g.last_preg_end = g.age
-                        kids = rng.choice(np.arange(len(prob_kids))+1, p=prob_kids)
+                        # kids = rng.choice(np.arange(len(prob_kids))+1, p=prob_kids)
+                        kids = choices(range(len(prob_kids)), weights=prob_kids)[0] + 1
                         
                         for k in range(kids):
-                            is_female = True if rng.uniform(0,1) < prob_female else False
+                            is_female = True if uniform(0,1) < prob_female else False
                             max_age = estimated_life_expectency(is_female, 0)
                             starts_new = is_female and (not f.first_female_born) and (max_age > tau_start)
                             if starts_new:
@@ -86,7 +86,7 @@ class Society():
                         g.preg_duration += 1
                     else:
                         if g.female and g.age >= tau_start and g.age < tau_end and (g.last_preg_end is None or (g.age - g.last_preg_end) >= tau_gap):
-                            g.preg = True if rng.uniform(0,1) < prob_preg else False
+                            g.preg = True if uniform(0,1) < prob_preg else False
                             g.preg_duration += 1
 
                     ## Death dynamics
