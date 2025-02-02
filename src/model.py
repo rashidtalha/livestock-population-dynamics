@@ -17,11 +17,11 @@ p_prod_end = 0.85               # Probability that the female goat survives unti
 p_female_kid = 0.50             # Probability that a new born kid is a female
 p_get_pregnant = 0.95           # Probability of getting pregnant in a given month (when all conditions are met)
 p_kids = [0.35, 0.45, 0.20]     # Probability distribution for giving birth to 1,2,3,... kids (extend by adding/removing values)
-p_sell_male = 0.95              # Probability of being sold (in a given month) for all eligible male goats
-p_sell_female = 0.95            # Probability of being sold (in a given month) for eligible female goats past the productive age
+p_sell_male = 0.95              # Probability of being sold (in a given month) for male goats over the age of t_sell_min_male
+p_sell_female = 0.95            # Probability of being sold (in a given month) for female goats over the age of t_sell_min_female
 
 ### MODEL-SPECIFIC PARAMETERS (RELATED TO ENVIRONMENT)
-expland_ownership = True       # Whether the number of owners will grow or not (according to the policy)
+expand_ownership = True       # Whether the number of owners will grow or not (according to the policy)
 
 ### ESTIMATE THE MAXIMUM AGE OF A GOAT
 def predict_max_age(is_female, current_age):
@@ -72,10 +72,11 @@ class Society():
         } 
 
     def add_goats(self, is_female=True, count=1, age=0):
-        if expland_ownership:
+        if expand_ownership:
             for _ in range(count):
                 f = Family()
-                f.goats.append( Goat(is_female, age, predict_max_age(is_female, age), False) )
+                max_age = predict_max_age(is_female, age)
+                f.goats.append( Goat(is_female, age, max_age, False) )
                 self.families.append(f)
         else:
             if len(self.families) == 0:
@@ -85,7 +86,8 @@ class Society():
             
             for _ in range(count):
                 f = self.families[0]
-                f.goats.append( Goat(is_female, age, predict_max_age(is_female, age), False) )
+                max_age = predict_max_age(is_female, age)
+                f.goats.append( Goat(is_female, age, max_age, False) )
 
         self.stats['num_families'] = len(self.families)
         if is_female:
@@ -98,7 +100,6 @@ class Society():
         dfam, dfem, dmal = 0, 0, 0
 
         for f in self.families:
-            # over_cap_male = False
             for g in f.goats:
 
                 # New family dynamics
@@ -115,21 +116,17 @@ class Society():
 
                     kids = rng.choice(np.arange(len(p_kids))+1, p=p_kids)
 
-                    for k in range(kids):
+                    for _ in range(kids):
                         is_female = True if rng.uniform(0,1) < p_female_kid else False
-                        max_age = predict_max_age(True, 0)
-                        starts_new = is_female and (not f.first_female_born) and (max_age > t_prod_start)
-                        
-                        f.goats.append(Goat(is_female, 0, max_age, starts_new))
-
+                        max_age = predict_max_age(is_female, 0)
+                        starts_new = (not f.first_female_born) and is_female and (max_age > t_prod_start)
+                        f.goats.append( Goat(is_female, 0, max_age, starts_new) )
                         if starts_new: f.first_female_born = True
 
                 # Pregnancy dynamics
-                if g.is_preg:
-                    g.months_preg += 1
-                elif g.is_female and g.age >= t_prod_start and g.age < t_prod_end and ((g.last_birth_at is None) or (g.age - g.last_birth_at) >= t_preg_gap):
-                        g.is_preg = True if rng.uniform(0,1) < p_get_pregnant else False
-                        g.months_preg += 1
+                if (not g.is_preg) and g.is_female and g.age >= t_prod_start and g.age < t_prod_end and ((g.last_birth_at is None) or (g.age - g.last_birth_at) >= t_preg_gap):
+                    g.is_preg = True if rng.uniform(0,1) < p_get_pregnant else False
+                if g.is_preg: g.months_preg += 1
 
                 # Selling dynamics (male)
                 if (not g.is_female) and g.age >= t_sell_min_male:
@@ -164,7 +161,7 @@ class Society():
 
         for j in new_families_bucket:
             f = Family()
-            f.goats.append(Goat(True, j[0], j[1], False))
+            f.goats.append( Goat(True, j[0], j[1], False) )
             self.families.append(f)
 
         self.stats['num_families'] = len(self.families)
