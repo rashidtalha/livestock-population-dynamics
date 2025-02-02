@@ -20,10 +20,10 @@ import model
 # model.p_female_kid = 0.50             # Probability that a new born kid is a female
 # model.p_get_pregnant = 0.95           # Probability of getting pregnant in a given month (when all conditions are met)
 # model.p_kids = [0.35, 0.45, 0.20]     # Probability distribution for giving birth to 1,2,3,... kids (extend by adding/removing values)
-# model.p_sell_male = 0.95              # Probability of being sold (in a given month) for all eligible male goats
-# model.p_sell_female = 0.95            # Probability of being sold (in a given month) for eligible female goats past the productive age
+# model.p_sell_male = 0.95              # Probability of being sold (in a given month) for male goats over the age of t_sell_min_male
+# model.p_sell_female = 0.95            # Probability of being sold (in a given month) for female goats over the age of t_sell_min_female
 
-# model.expland_ownership = True        # Whether the number of owners will grow or not (according to the policy)
+# model.expand_ownership = True        # Whether the number of owners will grow or not (according to the policy)
 
 #####################################
 
