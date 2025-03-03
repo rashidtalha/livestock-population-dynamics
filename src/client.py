@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-from dateutil.relativedelta import relativedelta
-from datetime import date
 
 import matplotlib.pyplot as plt
 import model
@@ -33,63 +31,43 @@ import model
 
 # RUNTIME PARAMETERS:
 
-f_interventions = 'data.csv'    # Record of manually adding new goats
-# t_sim = 57                      # Duration of the simulation
-iterations = 100                 # Number of iterations (to minimise dispersion due to probablistic effects)
+iterations = 20                 # Number of iterations (to minimise dispersion due to probablistic effects)
 show_graphs = False
+df, unique_months, t_sim = model.read_data('data.csv', 'today')
 
-#####################################
+#################################### For aggregated results
 
-# SETUP THE SOCIETY, LOAD EXTERNAL INTERVENTIONS & SIMULATE:
-
-def delta_months(this, base):
-    d = relativedelta(this,base)
-    return d.months + 12*d.years
-
-df = pd.read_csv(
-    f_interventions,
-    header=None,
-    parse_dates=[0],
-    names=["Date", "F Goats", "F Ages", "M Goats", "M Ages"],
-    dtype={"F Goats": int, "F Ages": int, "M Goats": int, "M Ages": int},
-)
-df["Date"] = pd.to_datetime(df["Date"])
-df["Months"] = df['Date'].apply( lambda x: delta_months(x, df["Date"].min()) )
-ending = delta_months(date.today(), df["Date"].min())
-unique_months = np.sort(df['Months'].unique())
-df.drop('Date', axis=1, inplace=True)
-
-t_sim = ending
-
-#####################################
-
-res = pd.DataFrame({k : np.zeros(t_sim+1, dtype=int) for k in model.Society().stats.keys()})
+res_agg = pd.DataFrame({k : np.zeros(t_sim+1, dtype=int) for k in model.Society().stats.keys()})
 for t in range(iterations):
     print(f'Iteration # {t+1:>2} (simulating {t_sim} months)')
-    
-    s = model.Society()
-    for m in range(t_sim):
-        if m in unique_months:
-            a = df.loc[df['Months'] == m, ['F Goats', 'F Ages', 'M Goats', 'M Ages']]
-            for entry in a.values:
-                s.add_goats(True,  entry[0], entry[1])
-                s.add_goats(True,  entry[2], entry[3])
-        
-        for k in res:
-            res.loc[m,k] += s.stats[k]
 
-        s.next_month()
-        if m == t_sim-1:
-            for k in res:
-                res.loc[m+1,k] += s.stats[k]
+    ha, hi, ma, md, fa, fd = model.iterate_history_full(df, t_sim, unique_months)
+    res_agg['num_families'] += ha
+    res_agg['inactive_familes'] += hi
+    res_agg['num_male'] += ma
+    res_agg['dead_male'] += md
+    res_agg['num_female'] += fa
+    res_agg['dead_female'] += fd
 
-res = np.ceil(res / iterations).astype(int)
-
-# DISPLAY THE RESULTS:
+res_agg = np.ceil(res_agg / iterations).astype(int)
 
 print(f'\nResults after {t_sim} months (average of {iterations} iterations):')
-for k in res:
-    print(f'\t{k:<16} = {res[k].iloc[-1]}')
+for k in res_agg:
+    print(f'\t{k:<16} = {res_agg[k].iloc[-1]}')
+
+# ##################################### For histogram-type results
+
+# res_hist = pd.DataFrame({k : np.zeros(iterations, dtype=int) for k in model.Society().stats.keys()})
+# for t in range(iterations):
+#     print(f'Iteration # {t+1:>2} (simulating {t_sim} months)')
+#     res_hist.iloc[t] = model.iterate_history_final(df, t_sim, unique_months)
+
+# print(f'\nResults after {t_sim} months (average of {iterations} iterations):')
+# for k in res_hist:
+#     mu, std = np.mean(res_hist[k]), np.std(res_hist[k])
+#     print(f'\t{k:<16} : mean = {mu:.2f} (std = {std:.2f})')
+
+####################################
 
 plt.rcParams.update({
     "lines.linewidth": 1.8,
@@ -103,9 +81,9 @@ plt.rcParams.update({
 t = np.arange(t_sim+1)
 
 fig, ax = plt.subplots()
-ax.plot(t, res['num_male'], c='#0047ab', label="Male")
-ax.plot(t, res['num_female'], c='#ff2052', label="Female")
-ax.plot(t, res['num_male']+res['num_female'], c='#7d7d7d', label="Total")
+ax.plot(t, res_agg['num_male'], c='#0047ab', label="Male")
+ax.plot(t, res_agg['num_female'], c='#ff2052', label="Female")
+ax.plot(t, res_agg['num_male']+res_agg['num_female'], c='#7d7d7d', label="Total")
 ax.legend()
 ax.set(ylim=(0,None), xlim=(0,t_sim))
 ax.set_title('Alive Goats')
@@ -114,7 +92,7 @@ plt.savefig("goats.png")
 if show_graphs: plt.show()
 
 fig, ax = plt.subplots()
-ax.plot(t, res['num_families'], c='#0047ab')
+ax.plot(t, res_agg['num_families'], c='#0047ab')
 ax.set(ylim=(0,None), xlim=(0,t_sim))
 ax.set_title('Active Families')
 ax.set_xlabel('Months')

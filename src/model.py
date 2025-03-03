@@ -1,4 +1,8 @@
 import numpy as np
+import pandas as pd
+from dateutil.relativedelta import relativedelta
+from datetime import date, datetime
+
 rng = np.random.default_rng()
 
 ### MODEL-SPECIFIC PARAMETERS (RELATED TO TIME)
@@ -167,3 +171,87 @@ class Society():
         self.stats['num_families'] = len(self.families)
         self.stats['num_male'] = sum([len([g for g in f.goats if not g.is_female]) for f in self.families])
         self.stats['num_female'] = sum([len([g for g in f.goats if g.is_female]) for f in self.families])
+
+### Auxiliary Tools (I/O)
+def delta_months(this, base):
+    d = relativedelta(this,base)
+    return d.months + 12*d.years
+
+def read_data(datafile, sim_end_date=None):
+    df = pd.read_csv(
+        datafile,
+        header=None,
+        parse_dates=[0],
+        names=["Date", "F Goats", "F Ages", "M Goats", "M Ages"],
+        dtype={"F Goats": int, "F Ages": int, "M Goats": int, "M Ages": int},
+        comment="#",
+    )
+    df["Date"] = pd.to_datetime(df["Date"])
+    earliest_date = df["Date"].min()
+    df["Months"] = df['Date'].apply( lambda x: delta_months(x, earliest_date) )
+    months = np.sort(df['Months'].unique())
+    df.drop('Date', axis=1, inplace=True)
+
+    if sim_end_date is None:
+        duration = None
+    elif sim_end_date == 'today':
+        duration = delta_months(date.today(), earliest_date)
+    else:
+        n = datetime.strptime(sim_end_date, '%Y-%m')
+        duration = delta_months(n, earliest_date)
+
+    return df, months, duration
+
+### Auxiliary Tools (Running the simulation)
+def iterate_history_full(df, duration, additions):
+    ha, hi, ma, md, fa, fd = np.zeros((6,duration+1), dtype=int)
+
+    s = Society()
+    for month in range(duration):
+        if month in additions:
+            a = df.loc[df['Months'] == month, ['F Goats', 'F Ages', 'M Goats', 'M Ages']]
+            for entry in a.values:
+                s.add_goats(True,  entry[0], entry[1])
+                s.add_goats(True,  entry[2], entry[3])
+
+        ha[month] = s.stats['num_families']
+        hi[month] = s.stats['inactive_familes']
+        ma[month] = s.stats['num_male']
+        md[month] = s.stats['dead_male']
+        fa[month] = s.stats['num_female']
+        fd[month] = s.stats['dead_female']
+
+        s.next_month()
+
+    ha[-1] = s.stats['num_families']
+    hi[-1] = s.stats['inactive_familes']
+    ma[-1] = s.stats['num_male']
+    md[-1] = s.stats['dead_male']
+    fa[-1] = s.stats['num_female']
+    fd[-1] = s.stats['dead_female']
+
+    return ha, hi, ma, md, fa, fd
+
+def iterate_history_final(df, duration, additions):
+    ha, hi, ma, md, fa, fd = 0, 0, 0, 0, 0, 0
+
+    s = Society()
+    for month in range(duration):
+        if month in additions:
+            a = df.loc[df['Months'] == month, ['F Goats', 'F Ages', 'M Goats', 'M Ages']]
+            for entry in a.values:
+                s.add_goats(True,  entry[0], entry[1])
+                s.add_goats(True,  entry[2], entry[3])
+
+        s.next_month()
+
+    ha = s.stats['num_families']
+    hi = s.stats['inactive_familes']
+    ma = s.stats['num_male']
+    md = s.stats['dead_male']
+    fa = s.stats['num_female']
+    fd = s.stats['dead_female']
+
+    return ha, hi, ma, md, fa, fd
+
+### Auxiliary Tools (Running the simulation: final result)
